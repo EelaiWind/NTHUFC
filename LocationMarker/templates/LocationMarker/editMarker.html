@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #map { height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div> 
+      <input type='text' id='marker_count'>
+      <input type='button' id='post' value='Post' onclick='postMarkers()'>
+      <form style='display:none;' id='marker_form' action = '{% url "LocationMarker:post" %}'method = 'post'>
+        {% csrf_token %}
+      </form>
+      
+    </div>
+    <div>
+      Edit Marker :
+      <input type='text' id='marker_title'>
+      <input type='text' id='marker_lat'>
+      <input type='text' id='marker_lng'>
+      <input type='button' id='marker_save' value='Save'>
+      <input type='button' id='marker_delete' value='Delete'>
+    </div>
+    <div id="map"></div>
+    <script type="text/javascript">
+
+      var map;
+      var markerList = [];
+      var marker_title, marker_lat, marker_lng;
+      marker_title = document.getElementById('marker_title');
+      marker_lat = document.getElementById('marker_lat');
+      marker_lng = document.getElementById('marker_lng');
+
+      function initMap() {
+        var myLatLng = {lat: 24.7913341, lng: 120.994148};
+        var mapOptions = {
+          zoom: 16,
+          center: myLatLng,
+        };
+
+        map = new google.maps.Map(document.getElementById('map'),mapOptions);
+        
+        google.maps.event.addListener(map, 'click', function(event){
+          addMarker(map,'marker', event.latLng);
+        });
+        
+        {% for marker in markerList %}
+          addMarker(map, '{{marker.title}}', {lat: {{marker.latitude}}, lng: {{marker.longitude}} });
+        {% endfor %}
+      }
+
+      function addMarker(map, title, location){
+        var marker = new google.maps.Marker({
+          position: location,
+          map: map,
+          draggable:true,
+          title: title
+        });
+
+        marker.addListener('click', function() {
+          showMarkertData(marker)
+        });
+
+        marker.addListener('drag', function() {
+          showMarkertData(marker);
+        });
+        markerList.push(marker);
+        document.getElementById('marker_count').value = 'Marker count = ' +markerList.length;
+        showMarkertData(marker);
+      }
+      function showMarkertData(marker){
+        marker_title.value = marker.getTitle();
+        marker_lat.value = marker.getPosition().lat();
+        marker_lng.value = marker.getPosition().lng();
+        marker_title.onchange =  function (){ changeMarkerAttributes(marker) };
+        document.getElementById('marker_delete').onclick = function (){ deleteMarker(marker) };
+        document.getElementById('marker_save').onclick = function (){ changeMarkerAttributes(marker) };
+      }
+      function deleteMarker(marker){
+        index = markerList.indexOf(marker);
+        if (index > -1){
+          markerList.splice(index,1);
+        }
+        marker.setMap(null);
+        marker = null;
+        document.getElementById('marker_count').value = 'Marker count = ' +markerList.length;
+      }
+
+      function changeMarkerAttributes(marker){
+          marker.setTitle(marker_title.value);
+          marker.setPosition({lat: Number(marker_lat.value), lng: Number(marker_lng.value) });
+      }
+
+      function postMarkers(){
+        form = document.getElementById('marker_form');
+        str = form.innerHTML;
+
+        for (i in markerList){
+          m = markerList[i];
+          str += "<input type='text' name='title' value='"+m.getTitle()+"'>";
+          str += "<input type='text' name='lat' value='"+m.getPosition().lat()+"'>";
+          str += "<input type='text' name='lng' value='"+m.getPosition().lng()+"'>";
+          str += "<br>";
+        }
+        form.innerHTML = str;
+        form.submit();
+      }
+    </script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAl62RoU1i9n0MzNAmw8fcKGTVPryxNJLM&callback=initMap">
+    </script>
+  </body>
+</html>

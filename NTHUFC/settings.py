@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'photos',
     'users',
     'crispy_forms',
+    'LocationMarker',
 )
 
 MIDDLEWARE_CLASSES = (

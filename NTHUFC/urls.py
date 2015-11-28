@@ -10,4 +10,5 @@ urlpatterns = patterns('',
     url(r'^', include('index.urls', namespace='index')),
     url(r'^photos/', include('photos.urls', namespace='photos')),
     url(r'^users/', include('users.urls', namespace='users')),
+    url(r'^marker/', include('LocationMarker.urls', namespace='LocationMarker')),
 )
